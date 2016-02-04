@@ -6,6 +6,7 @@ library(tidyr)
 rasterOptions(chunksize=10e10, maxmemory=10e11)
 
 mainDir <- "/Data/Base_Data/Climate/World/World_10min/projected/AR5_CMIP5_models"
+outDir <- "/atlas_scratch/mfleonawicz/projects/nwt/workspaces"
 rcp <- paste0("rcp", c(45, 60, 85))
 models <- list.files(file.path(mainDir, rcp[1]))
 vars <- c("pr", "tas")
@@ -40,3 +41,6 @@ prep_data <- function(files, shp, years, decades=TRUE, digits=1){
 }
 
 system.time( d <- group_by(d, Model, add=TRUE) %>% mutate(Data=purrr::map(Data, ~prep_data(unlist(.), shp, years))) )
+x <- d$Data[[1]][[1]]
+save(d, file=file.path(outDir, "nwt_data_pr_tas_monthly_decadal_means_2010_2099.RData"))
+save(x, file=file.path(outDir, "nwt_testing_subset.Rdata"))
