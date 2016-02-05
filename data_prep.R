@@ -18,7 +18,7 @@ shape.file <- "/atlas_scratch/mfleonawicz/projects/DataExtraction/data/shapefile
 shp <- shapefile(shape.file) %>% subset(NAME=="Northwest Territories") %>% spTransform(CRS(p4string))
 
 prep_files <- function(dir, rcp, model, variable){
-  list(list.files(file.path(dir, rcp, model, variable), pattern="\\.tif$", full=TRUE)[seq(1,1140, length=36)])
+  list(list.files(file.path(dir, rcp, model, variable), pattern="\\.tif$", full=TRUE))
 }
 
 d <- rev(expand.grid(Model=models, RCP=rcp, Var=vars, stringsAsFactors=F)) %>%
@@ -35,7 +35,6 @@ prep_data <- function(files, locs, shp, years, decades=TRUE, digits=1){
                   all.years <- gsub(".tif", "", sapply(strsplit(basename(x), "_"), "[", 8))
                   s <- stack(x, quick=TRUE) %>% rotate %>% crop(shp) %>% mask(shp)
                   names(s) <- all.years
-                  years<-as.numeric(all.years)
                   s <- subset(s, match(years, all.years))
                   d <- data.table(t(raster::extract(s, locs))) %>% setnames(rownames(locs)) %>%
                     mutate(Year=years) %>% melt(id.vars="Year", variable.name="Location")
@@ -59,6 +58,6 @@ d$Locs <- lapply(1:nrow(d),
     x=x[[k]])),
   x=d3$Locs)
 
-x <- d$Data[[1]][[1]]
-save(d, file=file.path(outDir, "nwt_data_pr_tas_monthly_decadal_means_2010_2099.RData"))
+x <- d$Maps[[1]][[1]]
+save(d, file=file.path(outDir, "nwt_data.RData"))
 save(x, file=file.path(outDir, "nwt_testing_subset.Rdata"))
