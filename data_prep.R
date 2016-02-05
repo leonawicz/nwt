@@ -73,4 +73,4 @@ d$Locs <- lapply(1:nrow(d),
 
 x <- d$Maps[[1]][[1]]
 save(d, d.cru, file=file.path(outDir, "nwt_data.RData"))
-save(x, file=file.path(outDir, "nwt_testing_subset.Rdata"))
+save(x, d.cru, file=file.path(outDir, "nwt_testing_subset.RData"))
