@@ -23,11 +23,12 @@ ui <- bootstrapPage(
     checkboxInput("show_communities", "Show communities", TRUE),
     checkboxInput("legend", "Show legend", TRUE),
     selectInput("location", "Community", c("", locs$loc), selected="", multiple=F),
-    actionButton("button_plot_and_table", "View Plot/Table")
+    conditionalPanel("input.show_communities == true && input.location !== null && input.location !== ''",
+                     actionButton("button_plot_and_table", "View Plot/Table", class="btn-block"))
   ),
   bsModal("Plot_and_table", "Plot and Table", "button_plot_and_table", size = "large",
-          plotOutput("TestPlot"),
-          dataTableOutput("TestTable")
+    plotOutput("TestPlot"),
+    dataTableOutput("TestTable")
   )
 )
 
@@ -66,8 +67,6 @@ server <- function(input, output, session) {
     }
   })
 
-  #add_CM <- function(x, p) addCircleMarkers(p$lng, p$lat, radius=10, color="black", fillColor="orange", fillOpacity=1, opacity=1, stroke=TRUE, layerId="Selected")
-
   observeEvent(input$Map_marker_click, { # update the map on map clicks
     p <- input$Map_marker_click
     proxy <- leafletProxy("Map")
@@ -96,7 +95,7 @@ server <- function(input, output, session) {
     }
   })
 
-  Data <- reactive({ d <- d.cru$Locs[[2]] %>% filter(Location=="Yellowknife" & Month=="Jun") })
+  Data <- reactive({ d <- d.cru$Locs[[2]] %>% filter(Location==input$location & Month=="Jun") })
 
   output$TestPlot <- renderPlot({ ggplot(Data(), aes(value, Year)) + geom_line() + geom_smooth() })
 
