@@ -53,7 +53,17 @@ server <- function(input, output, session) {
     if (input$show_communities) {
       proxy %>% showGroup("locations")
     } else {
-      proxy %>% hideGroup("locations")
+      proxy %>% hideGroup("locations") %>% removeMarker(layerId="Selected")
+    }
+  })
+
+  observeEvent(input$Map_marker_click, {
+    p <- input$Map_marker_click
+    proxy <- leafletProxy("Map")
+    if(p$id=="Selected"){
+      proxy %>% removeMarker(layerId="Selected")
+    } else {
+      proxy %>% setView(lng=p$lng, lat=p$lat, input$Map_zoom) %>% addCircleMarkers(p$lng, p$lat, radius=10, color="black", fillColor="orange", fillOpacity=1, opacity=1, stroke=TRUE, layerId="Selected")
     }
   })
 
