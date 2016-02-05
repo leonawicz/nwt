@@ -62,6 +62,7 @@ d.cru$Locs <- lapply(1:nrow(d.cru),
     function(i, x) x[[i]] %>% mutate(Month=factor(names(x)[i], levels=month.abb)),
     x=x[[k]])),
   x=d.cru$Locs)
+d.cru$Locs <- lapply(d.cru$Locs, function(x) mutate(x, Location=as.character(Location)))
 
 d <- group_by(d, Model, add=TRUE) %>% mutate(Data=purrr::map(Data, ~prep_data(unlist(.), locs, shp, gcm.years)))
 d <- group_by(d, Model, add=TRUE) %>% do(., Maps=purrr::transpose(.$Data[[1]])$Maps, Locs=purrr::transpose(.$Data[[1]])$Locs)
@@ -70,6 +71,7 @@ d$Locs <- lapply(1:nrow(d),
     function(i, x) x[[i]] %>% mutate(Month=factor(names(x)[i], levels=month.abb)),
     x=x[[k]])),
   x=d$Locs)
+d$Locs <- lapply(d$Locs, function(x) mutate(x, Location=as.character(Location)))
 
 x <- d$Maps[[1]][[1]]
 save(d, d.cru, file=file.path(outDir, "nwt_data.RData"))
