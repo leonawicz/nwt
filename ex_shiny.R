@@ -1,7 +1,9 @@
 library(shiny)
 library(raster)
+library(dplyr)
 library(leaflet)
-load("workspaces/nwt_testing_subset.Rdata")
+load("workspaces/nwt_testing_subset.RData")
+load("workspaces/nwt_locations.Rdata")
 
 r <- subset(x, 1)
 lon <- (xmin(r)+xmax(r))/2
@@ -15,6 +17,7 @@ ui <- bootstrapPage(
   leafletOutput("Map", width="100%", height="100%"),
   absolutePanel(top=10, right=10,
     sliderInput("dec", "Decade", min=min(decades), max=max(decades), value=decades[1], step=10, sep="", post="s"),
+    checkboxInput("show_communities", "Show communities", TRUE),
     checkboxInput("legend", "Show legend", TRUE)
   )
 )
@@ -28,7 +31,8 @@ server <- function(input, output, session) {
   ras_vals <- reactive({ values(ras()) })
 
   output$Map <- renderLeaflet({
-    leaflet() %>% setView(lon, lat, 4) %>% addTiles()
+    leaflet() %>% setView(lon, lat, 4) %>% addTiles() %>%
+      addCircleMarkers(data=locs, radius = ~10, color= ~"#000000", stroke=FALSE, fillOpacity=0.5, group="locations", layerId = ~loc)
   })
 
   observe({
@@ -41,6 +45,15 @@ server <- function(input, output, session) {
     proxy %>% clearControls()
     if (input$legend) {
       proxy %>% addLegend(position="bottomright", pal=pal, values=ras_vals(), title="Precipitation", labFormat=labelFormat(suffix="mm"))
+    }
+  })
+
+  observe({
+    proxy <- leafletProxy("Map")
+    if (input$show_communities) {
+      proxy %>% showGroup("locations")
+    } else {
+      proxy %>% hideGroup("locations")
     }
   })
 
