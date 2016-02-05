@@ -1,7 +1,10 @@
 library(shiny)
+library(shinyBS)
 library(raster)
+library(data.table)
 library(dplyr)
 library(leaflet)
+library(ggplot2)
 load("workspaces/nwt_testing_subset.RData")
 load("workspaces/nwt_locations.Rdata")
 
@@ -19,7 +22,12 @@ ui <- bootstrapPage(
     sliderInput("dec", "Decade", min=min(decades), max=max(decades), value=decades[1], step=10, sep="", post="s"),
     checkboxInput("show_communities", "Show communities", TRUE),
     checkboxInput("legend", "Show legend", TRUE),
-    selectInput("location", "Community", c("", locs$loc), selected="", multiple=F)
+    selectInput("location", "Community", c("", locs$loc), selected="", multiple=F),
+    actionButton("button_plot_and_table", "View Plot/Table")
+  ),
+  bsModal("Plot_and_table", "Plot and Table", "button_plot_and_table", size = "large",
+          plotOutput("TestPlot"),
+          dataTableOutput("TestTable")
   )
 )
 
@@ -87,6 +95,14 @@ server <- function(input, output, session) {
       proxy %>% setView(lng=p2$lon, lat=p2$lat, input$Map_zoom) %>% addCircleMarkers(p2$lon, p2$lat, radius=10, color="black", fillColor="orange", fillOpacity=1, opacity=1, stroke=TRUE, layerId="Selected") #add_CM(p2)
     }
   })
+
+  Data <- reactive({ d <- d.cru$Locs[[2]] %>% filter(Location=="Yellowknife" & Month=="Jun") })
+
+  output$TestPlot <- renderPlot({ ggplot(Data(), aes(value, Year)) + geom_line() + geom_smooth() })
+
+  output$TestTable <- renderDataTable({
+    Data()
+  }, options = list(pageLength=5))
 
 }
 
