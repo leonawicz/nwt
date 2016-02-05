@@ -5,13 +5,15 @@ library(dplyr)
 library(tidyr)
 rasterOptions(chunksize=10e10, maxmemory=10e11)
 
-mainDir <- "/Data/Base_Data/Climate/World/World_10min/projected/AR5_CMIP5_models"
+mainDir <- "/Data/Base_Data/Climate/World/World_10min"
+gcmDir <- file.path(mainDir, "projected/AR5_CMIP5_models")
 outDir <- "/atlas_scratch/mfleonawicz/projects/nwt/workspaces"
 load(file.path(outDir, "nwt_locations.RData"))
 rcp <- paste0("rcp", c(45, 60, 85))
-models <- list.files(file.path(mainDir, rcp[1]))
+models <- list.files(file.path(gcmDir, rcp[1]))
 vars <- c("pr", "tas")
-years <- 2010:2099
+gcm.years <- 2010:2099
+cru.years <- 1950:2013
 
 p4string <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 shape.file <- "/atlas_scratch/mfleonawicz/projects/DataExtraction/data/shapefiles/Political/CanadianProvinces_NAD83AlaskaAlbers.shp"
@@ -23,7 +25,10 @@ prep_files <- function(dir, rcp, model, variable){
 
 d <- rev(expand.grid(Model=models, RCP=rcp, Var=vars, stringsAsFactors=F)) %>%
   data.table %>% group_by(Var, RCP, Model) %>%
-  mutate(Data=purrr::pmap(list(rcp=RCP, model=Model, variable=Var, dir=mainDir), prep_files))
+  mutate(Data=purrr::pmap(list(rcp=RCP, model=Model, variable=Var, dir=gcmDir), prep_files))
+
+d.cru <- data.table(Var=vars) %>% group_by(Var) %>%
+  mutate(Data=purrr::pmap(list(rcp="historical", model="CRU/CRU_TS32", variable=Var, dir=mainDir), prep_files))
 
 prep_data <- function(files, locs, shp, years, decades=TRUE, digits=1){
   rownames(locs) <- locs$loc
@@ -50,14 +55,22 @@ nt.na <- match(c("Paulatuk", "Sachs Harbour", "Ulukhaktok"), locs$loc)
 locs$lon[nt.na[2:3]] <- locs$lon[nt.na[2:3]] + 0.1666667
 locs$lat[nt.na[1]] <- locs$lat[nt.na[1]] - 0.1666667
 
-d <- group_by(d, Model, add=TRUE) %>% mutate(Data=purrr::map(Data, ~prep_data(unlist(.), locs, shp, years, decades=F)))
+d.cru <- group_by(d.cru, Var, add=TRUE) %>% mutate(Data=purrr::map(Data, ~prep_data(unlist(.), locs, shp, cru.years)))
+d.cru <- group_by(d.cru, Var, add=TRUE) %>% do(., Locs=purrr::transpose(.$Data[[1]])$Locs)
+d.cru$Locs <- lapply(1:nrow(d.cru),
+  function(k, x) rbindlist(lapply(1:12,
+    function(i, x) x[[i]] %>% mutate(Month=factor(names(x)[i], levels=month.abb)),
+    x=x[[k]])),
+  x=d.cru$Locs)
+
+d <- group_by(d, Model, add=TRUE) %>% mutate(Data=purrr::map(Data, ~prep_data(unlist(.), locs, shp, gcm.years)))
 d <- group_by(d, Model, add=TRUE) %>% do(., Maps=purrr::transpose(.$Data[[1]])$Maps, Locs=purrr::transpose(.$Data[[1]])$Locs)
 d$Locs <- lapply(1:nrow(d),
   function(k, x) rbindlist(lapply(1:12,
     function(i, x) x[[i]] %>% mutate(Month=factor(names(x)[i], levels=month.abb)),
     x=x[[k]])),
-  x=d3$Locs)
+  x=d$Locs)
 
 x <- d$Maps[[1]][[1]]
-save(d, file=file.path(outDir, "nwt_data.RData"))
+save(d, d.cru, file=file.path(outDir, "nwt_data.RData"))
 save(x, file=file.path(outDir, "nwt_testing_subset.Rdata"))
