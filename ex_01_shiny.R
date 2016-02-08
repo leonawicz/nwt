@@ -2,7 +2,7 @@ library(shiny)
 library(dplyr)
 library(leaflet)
 
-load("workspaces/nwt_locations.RData")
+load("nwt_locations.RData")
 
 lon <- -119.25
 lat <- 69.333
@@ -30,15 +30,15 @@ server <- function(input, output, session) {
   })
 
 # @knitr server01observer
-  observe({ # show or hide location markers
-    proxy <- leafletProxy("Map")
-    if (input$show_communities) {
-      proxy %>% showGroup("locations")
-    } else {
-      updateSelectInput(session, "location", selected="")
-      proxy %>% hideGroup("locations") %>% removeMarker(layerId="Selected")
-    }
-  })
+observe({ # show or hide location markers
+  proxy <- leafletProxy("Map")
+  if (input$show_communities) {
+    proxy %>% showGroup("locations")
+  } else {
+    updateSelectInput(session, "location", selected="")
+    proxy %>% hideGroup("locations") %>% removeMarker(layerId="Selected")
+  }
+})
 
 
 # @knitr server01remainder

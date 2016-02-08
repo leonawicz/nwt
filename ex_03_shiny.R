@@ -4,13 +4,13 @@ library(dplyr)
 library(leaflet)
 library(ggplot2)
 
-load("workspaces/nwt_testing_subset.RData")
-load("workspaces/nwt_locations.RData")
+load("nwt_testing_subset.RData")
+load("nwt_locations.RData")
 
 decades <- seq(2010, 2090, by=10)
 lon <- -119.25
 lat <- 69.333
-d <- d.cru$Locs[[2]]
+d <- d.cru$Locs[[2]] %>% filter(Month=="Jun")
 
 # @knitr ui02
 ui <- bootstrapPage(
@@ -98,13 +98,13 @@ server <- function(input, output, session) {
   })
 
 # @knitr server03pointdata
-  Data <- reactive({ d %>% filter(Location==input$location & Month=="Jun") })
+Data <- reactive({ d %>% filter(Location==input$location) })
 
-  output$TestPlot <- renderPlot({ ggplot(Data(), aes(value, Year)) + geom_line() + geom_smooth() })
+output$TestPlot <- renderPlot({ ggplot(Data(), aes(value, Year)) + geom_line() + geom_smooth() })
 
-  output$TestTable <- renderDataTable({
-    Data()
-  }, options = list(pageLength=5))
+output$TestTable <- renderDataTable({
+  Data()
+}, options = list(pageLength=5))
 # @knitr server03remainder
 }
 

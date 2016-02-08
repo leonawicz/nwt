@@ -3,8 +3,8 @@ library(raster)
 library(dplyr)
 library(leaflet)
 
-load("workspaces/nwt_testing_subset.RData")
-load("workspaces/nwt_locations.RData")
+load("nwt_testing_subset.RData")
+load("nwt_locations.RData")
 
 decades <- seq(2010, 2090, by=10)
 lon <- -119.25
@@ -29,9 +29,9 @@ ui <- bootstrapPage(
 # @knitr server02
 server <- function(input, output, session) {
 # @knitr server02obj
-  ras <- reactive({ subset(x, which(decades==input$dec)) })
-  ras_vals <- reactive({ values(ras()) })
-  pal <- reactive({ colorNumeric(c("#0C2C84", "#41B6C4", "#FFFFCC"), ras_vals(), na.color="transparent") })
+ras <- reactive({ subset(x, which(decades==input$dec)) })
+ras_vals <- reactive({ values(ras()) })
+pal <- reactive({ colorNumeric(c("#0C2C84", "#41B6C4", "#FFFFCC"), ras_vals(), na.color="transparent") })
 
 # @knitr server02remainder1
   output$Map <- renderLeaflet({
@@ -40,10 +40,10 @@ server <- function(input, output, session) {
   })
 
 # @knitr server02obs
-  observe({
-    proxy <- leafletProxy("Map")
-    proxy %>% removeTiles(layerId="rasimg") %>% addRasterImage(ras(), colors=pal(), opacity=0.8, layerId="rasimg")
-  })
+observe({
+  proxy <- leafletProxy("Map")
+  proxy %>% removeTiles(layerId="rasimg") %>% addRasterImage(ras(), colors=pal(), opacity=0.8, layerId="rasimg")
+})
 
   observe({
     proxy <- leafletProxy("Map")
