@@ -5,10 +5,10 @@ output: html_document
 runtime: shiny
 ---
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, results="hide"}
 library(knitr)
-opts_chunk$set(cache=FALSE, eval=TRUE, tidy=TRUE, messages=FALSE, warnings=FALSE)
-read_chunk("ex_00_shiny.R")
+opts_chunk$set(cache=FALSE, eval=TRUE, messages=FALSE, warnings=FALSE)
+lapply(list.files(pattern="ex_0.*.shiny.R"), read_chunk)
 library(shiny)
 ```
 
@@ -18,6 +18,8 @@ Below I present a series of examples which build upon each other.
 The code displays both point data and raster data on leaflet maps with Shiny app integration.
 The focus here is to show the utility of event observation on the server side for integrating the behavior of browser elements, namely, the leaflet map.
 
+##
+##
 ### Version 0 - Use observers
 
 The app does not much in this version, but it provides a clear view of how to use observers in Shiny apps to ensure that various inputs and outputs remain mutually well behaved.
@@ -75,14 +77,14 @@ shinyAppFile(
 ```
 
 I do not want a selected location in the map to return as selected when the checkbox for showing map points is rechecked.
-This is a matter of preference and will make more sense later when the app becomes more complex.
+This is a matter of preference and may make more sense in the context of my completed.
 Similarly, I hide the `selectInput` when the checkbox is unchecked in the same call to `observe`.
 
 ##
 ##
 ### Version 2 - Raster data
 
-Later, in the final version of the app, the inclusion of rasterized map layers will appear as a more fundamental component of the app and the points overlay will appear relatively like a supplemental feature.
+In the final version of the app, the inclusion of rasterized map layers appears a more fundamental component of the app and the points overlay appears a relatively supplemental feature.
 When I designed the app, the raster layers in fact came first. I present this toy example in reverse order so that the first three observers could be explored initially with minimal app clutter.
 
 Adding the rasterized map will require more observers, but they are all less opaque than the first three.
@@ -113,6 +115,7 @@ shinyAppFile(
   options=list(width="100%", height=500)
 )
 ```
+
 The color palette is generated reactively, specific to the current raster map, and for this data won't appear to change much as you move the slider.
 Things are getting a bit cramped in this display window but I will leave it as is.
 
