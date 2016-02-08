@@ -1,6 +1,6 @@
 library(raster)
 library(leaflet)
-load("workspaces/nwt_testing_subset.Rdata")
+load("workspaces/nwt_testing_subset.RData")
 
 r <- subset(x, 1)
 pal <- colorNumeric(c("#0C2C84", "#41B6C4", "#FFFFCC"), values(r), na.color="transparent")
