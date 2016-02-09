@@ -22,7 +22,7 @@ The focus here is to show the utility of event observation on the server side fo
 ##
 ### Version 0 - Use observers
 
-The app does not much in this version, but it provides a clear view of how to use observers in Shiny apps to ensure that various inputs and outputs remain mutually well behaved.
+The app does not do much in this version, but it provides a clear view of how to use observers in Shiny apps to ensure that various inputs and outputs remain mutually well behaved.
 Here I use `observeEvent` three distinct times to tie together the reactive behavior of instances of `selectInput` and `leafletOutput`.
 The entire `ui.R` at this point is:
 
