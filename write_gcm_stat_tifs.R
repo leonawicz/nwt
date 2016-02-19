@@ -47,5 +47,6 @@ d.mag <- mutate(d.mag, Stat="Magnitude",
 
 d.stats <- bind_rows(d.stats, d.mag)
 
-# save tifs
-d.stats %>% split(.$outfile) %>% walk(~writeRaster(.$Map[[1]], file.path(outDir, .$outfile), format="GTiff", datatype="FLT4S"))
+# save tifs and separate into temperature and precip files, which are rounded differently
+d.stats %>% filter(Var == "tas") %>% split(.$outfile) %>% walk(~writeRaster(round(.$Map[[1]],1), file.path(outDir, .$outfile), format="GTiff", datatype="FLT4S", overwrite=TRUE))
+d.stats %>% filter(Var == "pr") %>% split(.$outfile) %>% walk(~writeRaster(round(.$Map[[1]]), file.path(outDir, .$outfile), format="GTiff", datatype="FLT4S", overwrite=TRUE))
