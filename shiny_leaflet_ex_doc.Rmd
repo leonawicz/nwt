@@ -151,7 +151,7 @@ shinyAppFile(files[4], options=list(width="100%", height=500))
 Code for the series of apps shown here can be found on [Github](https://github.com/leonawicz/nwt).
 This includes the toy data sets used here so that you can run the app.
 
-See the more advanced [complete app](http://shiny.snap.uaf.edu/nwtapp/) on which this example is based.
+See the more advanced [complete app](https://uasnap.shinyapps.io/nwtapp/) on which this example is based.
 
-For another example, see [my first app using leaflet](http://shiny.snap.uaf.edu/cc4liteFinal/),
+For another example, see [my first app using leaflet](https://uasnap.shinyapps.io/cc4liteFinal/),
 which contains thousands of communities across Alaska and western Canada but which does not use rasterized maps.
