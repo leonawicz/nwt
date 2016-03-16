@@ -50,6 +50,18 @@ prep_data <- function(files, locs, shp, years, decades=TRUE, digits=1){
   list(x)
 }
 
+brickList_transpose <- function(x){
+  id <- names(x)
+  idx <- 1:nlayers(x[[1]])
+  break_brick <- function(x, y){
+    x <- lapply(y, function(i, x) subset(x, i), x=x)
+    names(x) <- unlist(purrr::map(x, ~names(.x)))
+    x
+  }
+  x %>% purrr::map2(purrr::map(seq_along(x), ~idx), ~break_brick(.x, .y)) %>%
+    purrr::transpose() %>% purrr::map(~brick(.x)) %>% purrr::map(~setNames(.x, id))
+}
+
 # hack to deal with specific NT locations issues
 nt.na <- match(c("Paulatuk", "Sachs Harbour", "Ulukhaktok"), locs$loc)
 locs$lon[nt.na[2:3]] <- locs$lon[nt.na[2:3]] + 0.1666667
@@ -65,7 +77,9 @@ d.cru$Locs <- lapply(1:nrow(d.cru),
 d.cru$Locs <- lapply(d.cru$Locs, function(x) mutate(x, Location=as.character(Location)))
 
 d <- group_by(d, Model, add=TRUE) %>% mutate(Data=purrr::map(Data, ~prep_data(unlist(.), locs, shp, gcm.years)))
-d <- group_by(d, Model, add=TRUE) %>% do(., Maps=purrr::transpose(.$Data[[1]])$Maps, Locs=purrr::transpose(.$Data[[1]])$Locs)
+d <- group_by(d, Model, add=TRUE) %>% do(., Maps=purrr::transpose(.$Data[[1]])$Maps, Locs=purrr::transpose(.$Data[[1]])$Locs) %>%
+  mutate(Maps=purrr::map(.$Maps, ~brickList_transpose(.x)))
+
 d$Locs <- lapply(1:nrow(d),
   function(k, x) rbindlist(lapply(1:12,
     function(i, x) x[[i]] %>% mutate(Month=factor(names(x)[i], levels=month.abb)),
@@ -73,6 +87,21 @@ d$Locs <- lapply(1:nrow(d),
   x=d$Locs)
 d$Locs <- lapply(d$Locs, function(x) mutate(x, Location=as.character(Location)))
 
+write_map_subtables <- function(x, decades=seq(2010, 2090, by=10), outDir){
+  dir.create(outDir, showWarnings=FALSE)
+  do_write <- function(x){
+    d <- x
+    save(d, file=paste0(outDir, "/", unique(d$Var), "_", unique(d$RCP), "_", unique(d$Decade), ".RData"))
+  }
+  x <- purrr::map(seq_along(decades),
+    ~select(x, -Locs) %>% group_by(Var, RCP, Model) %>% mutate(Decade=decades[.x], Maps=purrr::map2(rep(.x, length(decades)), .$Maps, ~list(.y[.x])))
+  )
+  x %>% purrr::walk(~.x %>% split(paste(.$Var, .$RCP)) %>% purrr::walk(~do_write(.x)))
+}
+
+write_map_subtables(d, outDir=file.path(outDir, "map_subtables"))
+
 x <- d$Maps[[1]][[1]]
-save(d, d.cru, file=file.path(outDir, "nwt_data.RData"))
+d.gcm <- select(d, -Maps)
+save(d.gcm, d.cru, file=file.path(outDir, "nwt_communities.RData"))
 save(x, d.cru, file=file.path(outDir, "nwt_testing_subset.RData"))
